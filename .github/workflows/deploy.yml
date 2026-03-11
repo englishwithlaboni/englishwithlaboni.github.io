@@ -1,0 +1,42 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to the branch
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        # Using npm install instead of npm ci in case package-lock.json isn't committed yet
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Deploy to branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: deploy
+          # force_orphan creates a fresh branch with only the latest commit,
+          # effectively removing all previous builds and history in that branch.
+          force_orphan: true
+          commit_message: "Deploy: ${{ github.sha }}"
